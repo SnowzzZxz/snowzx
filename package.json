@@ -1,0 +1,8 @@
+{
+  "name": "snowzx",
+  "version": "1.0.0",
+  "description": "Snowzx",
+  "dependencies": {
+    "axios": "^1.6.0"
+  }
+}
