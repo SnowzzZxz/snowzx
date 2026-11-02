@@ -321,7 +321,6 @@
     <h1 class="name reveal d2" id="name"></h1>
     <p class="tagline reveal d3" id="tagline"></p>
     
-    <!-- BOTÃO APOIAR (Abre o checkout) -->
     <button class="btn-apoio reveal d4" id="btnApoiar">
       <svg viewBox="0 0 24 24"><path d="M12 21s-7.5-4.6-9.3-9.2C1.3 8.2 3.4 5 6.8 5c2 0 3.5 1.1 4.3 2.3l.9 1.3.9-1.3C13.7 6.1 15.2 5 17.2 5c3.4 0 5.5 3.2 4.1 6.8C19.5 16.4 12 21 12 21z"/></svg>
       <span>Apoiar</span>
@@ -336,9 +335,6 @@
   <a class="marca" href="#">nao chorax</a>
 </div>
 
-<!-- ============================================================
-     TELA DE CHECKOUT (ESTILO PYPAG)
-     ============================================================ -->
 <div class="checkout-container" id="viewCheckout">
   <div class="checkout-scene" id="btnFecharCheckout"></div>
   
@@ -354,7 +350,6 @@
 
     <p class="card-desc" id="descCheckout"></p>
 
-    <!-- FORMULÁRIO -->
     <form id="formCheckout">
       <div class="valores" role="group" aria-label="Valor da doação">
         <button type="button" data-v="5">R$ 5</button>
@@ -387,7 +382,6 @@
 
     <div class="aviso erro" id="erroCheckout"></div>
 
-    <!-- ÁREA DO PIX GERADO -->
     <div class="pix" id="pixArea">
       <img id="qrCodeImg" alt="QR Code do PIX">
       <div class="pix-code" id="pixCodigo"></div>
@@ -404,9 +398,6 @@
 </div>
 
 <script>
-/* ============================================================
-   CONFIGURAÇÃO DO PERFIL
-   ============================================================ */
 const perfil = {
   nome: "Snowzx",
   tagline: "Entre o barulho do mundo, escolhi o silêncio.",
@@ -414,18 +405,12 @@ const perfil = {
   imagemBg: "fundo.jpg",
 };
 
-// ⚠️ COLOQUE AS URLS DO SEU BACKEND AQUI (ZPay)
-// Se você hospedou os arquivos Node.js na Vercel, as URLs ficam tipo:
-// https://seu-projeto.vercel.app/api/criar
-// https://seu-projeto.vercel.app/api/consultar
+// URLs relativas puxando direto da sua Vercel
 const API_URLS = {
-  criar: "https://SEU-BACKEND-AQUI/api/criar-pix",   
-  consultar: "https://SEU-BACKEND-AQUI/api/consultar-pix" 
+  criar: "/api/criar-pix",   
+  consultar: "/api/consultar-pix" 
 };
 
-/* ============================================================
-   Lógica do cadeado e áudio
-   ============================================================ */
 const lockScreen = document.getElementById('lockScreen');
 const lockIcon = document.getElementById('lockIcon');
 const mainContent = document.getElementById('mainContent');
@@ -454,7 +439,6 @@ audioToggle.addEventListener('click', () => {
   else { video.muted = true; audioToggle.classList.add('muted'); }
 });
 
-// Popula dados do perfil e do checkout
 document.getElementById("avatar").src = perfil.avatar;
 document.getElementById("name").textContent = perfil.nome;
 document.getElementById("tagline").textContent = perfil.tagline;
@@ -467,9 +451,6 @@ let vis = parseInt(localStorage.getItem("visitas") || "0", 10) + 1;
 localStorage.setItem("visitas", vis);
 document.getElementById("visitas").textContent = vis;
 
-/* ============================================================
-   NAVEGAÇÃO ENTRE TELAS
-   ============================================================ */
 const viewCheckout = document.getElementById('viewCheckout');
 
 document.getElementById('btnApoiar').addEventListener('click', () => {
@@ -489,9 +470,6 @@ const fecharCheckout = () => {
 document.getElementById('btnVoltar').addEventListener('click', fecharCheckout);
 document.getElementById('btnFecharCheckout').addEventListener('click', fecharCheckout);
 
-/* ============================================================
-   LÓGICA DE PAGAMENTO PIX (INTEGRAÇÃO ZPAY)
-   ============================================================ */
 const formCheckout = document.getElementById('formCheckout');
 const btnGerarPix = document.getElementById('btnGerarPix');
 const erroCheckout = document.getElementById('erroCheckout');
@@ -502,7 +480,6 @@ const btnValor = document.getElementById('btnValor');
 let valorSelecionado = 10;
 let timerStatus = null;
 
-// --- Lógica do valor ---
 const parseValor = txt => {
   const limpo = String(txt).replace(/[^\d,.]/g, '').replace(/\.(?=.*[.,])/g, '').replace(',', '.');
   const n = parseFloat(limpo);
@@ -538,10 +515,8 @@ inputValorOutro?.addEventListener('input', () => {
   btnValor.textContent = fmtBRL(valorSelecionado);
 });
 
-// Inicia com o segundo botão (R$10) selecionado
 if (botoesValor[1]) marcarBotao(botoesValor[1]);
 
-// --- Envio do form ---
 formCheckout.addEventListener('submit', async (e) => {
   e.preventDefault();
   erroCheckout.style.display = 'none';
@@ -576,14 +551,12 @@ formCheckout.addEventListener('submit', async (e) => {
     const data = await response.json();
     if (!data.success) throw new Error(data.error || "Erro ao gerar Pix");
 
-    // Esconde form, mostra pix
     formCheckout.style.display = 'none';
     pixArea.classList.add('on');
     
     document.getElementById('pixCodigo').textContent = data.pixCode;
     document.getElementById('qrCodeImg').src = data.qrCode;
 
-    // Inicia checagem de pagamento
     iniciarChecagem(data.paymentId);
 
   } catch (err) {
@@ -595,7 +568,6 @@ formCheckout.addEventListener('submit', async (e) => {
   }
 });
 
-// --- Checar status do pagamento ---
 function iniciarChecagem(paymentId) {
   if (timerStatus) clearInterval(timerStatus);
   
@@ -620,7 +592,6 @@ function iniciarChecagem(paymentId) {
   }, 3000);
 }
 
-// --- Botão Copiar ---
 document.getElementById('btnCopiarPix').addEventListener('click', async () => {
   const btn = document.getElementById('btnCopiarPix');
   const codigo = document.getElementById('pixCodigo').textContent;
@@ -633,7 +604,6 @@ document.getElementById('btnCopiarPix').addEventListener('click', async () => {
   setTimeout(() => { btn.textContent = 'Copiar código PIX'; }, 2000);
 });
 
-// --- Botão Nova Doação ---
 document.getElementById('btnNovaDoacao').addEventListener('click', () => {
   if (timerStatus) clearInterval(timerStatus);
   pixArea.classList.remove('on');
@@ -642,7 +612,6 @@ document.getElementById('btnNovaDoacao').addEventListener('click', () => {
   btnRotulo.textContent = 'Apoiar com';
   btnValor.textContent = fmtBRL(valorSelecionado);
 });
-
 </script>
 </body>
 </html>
