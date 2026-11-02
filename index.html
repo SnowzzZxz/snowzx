@@ -14,7 +14,6 @@
     --accent:#55ffff; --accent-2:#a855f7; --green:#4ade80;
     --font:'Inter',sans-serif; --font-display:'Fraunces',serif; --font-mono:'Space Grotesk',monospace;
     
-    /* Cores para o card da PYPAG */
     --glass: rgba(255,255,255,0.10);
     --glass-strong: rgba(255,255,255,0.16);
     --glass-border: rgba(255,255,255,0.28);
@@ -260,12 +259,7 @@
   .pix{ display:none; margin-top:20px; text-align:center; }
   .pix.on{ display:block; }
   .pix img{ width:200px; height:200px; margin:0 auto 16px; border-radius:16px; background:#fff; padding:10px; }
-  .pix-code{
-    width:100%; font-family:ui-monospace,Consolas,monospace; font-size:11px;
-    word-break:break-all; text-align:left; padding:12px; border-radius:12px;
-    background:rgba(0,0,0,.35); border:1px solid rgba(255,255,255,.14); color:var(--text);
-    max-height:96px; overflow:auto;
-  }
+  
   .pix-acoes{ display:flex; gap:8px; margin-top:12px; }
   .pix-acoes button{
     flex:1; padding:12px; border-radius:12px; cursor:pointer;
@@ -282,7 +276,7 @@
   @keyframes spin { to { transform: rotate(360deg); } }
 
   /* ============================================================
-     TELA DE SUCESSO (NOVO)
+     TELA DE SUCESSO
      ============================================================ */
   .success-screen {
     display: none;
@@ -382,7 +376,7 @@
       <img id="avatarCheckout" alt="">
       <div>
         <div class="card-nome" id="cardNome">Snowzx</div>
-        <div class="card-sub">Apoie via PIX</div>
+        <div class="card-sub">Faz a boa ai tropa</div>
       </div>
     </header>
 
@@ -422,7 +416,6 @@
 
     <div class="pix" id="pixArea">
       <img id="qrCodeImg" alt="QR Code do PIX">
-      <div class="pix-code" id="pixCodigo"></div>
       <div class="pix-acoes">
         <button type="button" id="btnCopiarPix">Copiar código PIX</button>
         <button type="button" id="btnNovaDoacao">Nova doação</button>
@@ -430,7 +423,6 @@
       <p class="pix-status" id="statusPix" role="status" aria-live="polite"></p>
     </div>
 
-    <!-- NOVA TELA DE SUCESSO -->
     <div class="success-screen" id="successArea">
       <div class="success-icon-wrap">✓</div>
       <div class="success-title">Recebido com sucesso</div>
@@ -450,7 +442,6 @@ const perfil = {
   imagemBg: "fundo.jpg",
 };
 
-// URLs relativas puxando direto da sua Vercel
 const API_URLS = {
   criar: "/api/criar-pix",   
   consultar: "/api/consultar-pix" 
@@ -519,12 +510,13 @@ const formCheckout = document.getElementById('formCheckout');
 const btnGerarPix = document.getElementById('btnGerarPix');
 const erroCheckout = document.getElementById('erroCheckout');
 const pixArea = document.getElementById('pixArea');
-const successArea = document.getElementById('successArea'); // Nova área
+const successArea = document.getElementById('successArea');
 const btnRotulo = document.getElementById('btnRotulo');
 const btnValor = document.getElementById('btnValor');
 
 let valorSelecionado = 10;
 let timerStatus = null;
+let pixCodeAtual = ""; // Guarda o código em memória para copiar
 
 const parseValor = txt => {
   const limpo = String(txt).replace(/[^\d,.]/g, '').replace(/\.(?=.*[.,])/g, '').replace(',', '.');
@@ -567,7 +559,7 @@ formCheckout.addEventListener('submit', async (e) => {
   e.preventDefault();
   erroCheckout.style.display = 'none';
   pixArea.classList.remove('on');
-  successArea.classList.remove('on'); // Reseta a tela de sucesso caso esteja visível
+  successArea.classList.remove('on');
 
   if (!(valorSelecionado >= 1)) {
     erroCheckout.textContent = 'Informe um valor de R$ 1,00 ou mais.';
@@ -601,7 +593,8 @@ formCheckout.addEventListener('submit', async (e) => {
     formCheckout.style.display = 'none';
     pixArea.classList.add('on');
     
-    document.getElementById('pixCodigo').textContent = data.pixCode;
+    // Salva o código na variável e esconde da tela
+    pixCodeAtual = data.pixCode;
     document.getElementById('qrCodeImg').src = data.qrCode;
 
     iniciarChecagem(data.paymentId);
@@ -629,14 +622,11 @@ function iniciarChecagem(paymentId) {
       if (data.success && data.isPaid) {
         clearInterval(timerStatus);
         
-        // Esconde o PIX e mostra a tela de sucesso
         pixArea.classList.remove('on');
         successArea.classList.add('on');
 
-        // Espera 3 segundos e fecha o checkout (opcional)
         setTimeout(() => {
           fecharCheckout();
-          // Reseta o card para a próxima vez
           setTimeout(() => {
             successArea.classList.remove('on');
             formCheckout.style.display = '';
@@ -654,12 +644,23 @@ function iniciarChecagem(paymentId) {
 
 document.getElementById('btnCopiarPix').addEventListener('click', async () => {
   const btn = document.getElementById('btnCopiarPix');
-  const codigo = document.getElementById('pixCodigo').textContent;
-  try { 
-    await navigator.clipboard.writeText(codigo); 
-  } catch {
-    const t = document.createElement('textarea'); t.value = codigo; document.body.appendChild(t); t.select(); document.execCommand('copy'); t.remove();
+  
+  if (!pixCodeAtual) {
+    alert("Código Pix não gerado ainda.");
+    return;
   }
+
+  try { 
+    await navigator.clipboard.writeText(pixCodeAtual); 
+  } catch {
+    const t = document.createElement('textarea'); 
+    t.value = pixCodeAtual; 
+    document.body.appendChild(t); 
+    t.select(); 
+    document.execCommand('copy'); 
+    t.remove();
+  }
+  
   btn.textContent = 'Copiado!';
   setTimeout(() => { btn.textContent = 'Copiar código PIX'; }, 2000);
 });
