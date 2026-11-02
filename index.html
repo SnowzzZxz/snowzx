@@ -281,6 +281,44 @@
   }
   @keyframes spin { to { transform: rotate(360deg); } }
 
+  /* ============================================================
+     TELA DE SUCESSO (NOVO)
+     ============================================================ */
+  .success-screen {
+    display: none;
+    text-align: center;
+    padding: 30px 10px;
+    animation: fadeIn .3s ease;
+  }
+  .success-screen.on { display: block; }
+  
+  .success-icon-wrap {
+    width: 70px; height: 70px; margin: 0 auto 18px;
+    border-radius: 50%; background: var(--green); color: #fff;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 32px; font-weight: 800; line-height: 1;
+    animation: popIn .4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    box-shadow: 0 10px 30px rgba(74, 222, 128, 0.3);
+  }
+  .success-title {
+    font-family: var(--font-display);
+    font-size: 22px;
+    color: var(--text);
+    font-weight: 600;
+    margin-bottom: 8px;
+  }
+  .success-subtitle {
+    font-size: 14px;
+    color: var(--text-dim);
+  }
+  @keyframes popIn {
+    0% { transform: scale(0.6); opacity: 0; }
+    100% { transform: scale(1); opacity: 1; }
+  }
+  @keyframes fadeIn {
+    from { opacity: 0; } to { opacity: 1; }
+  }
+
   @media(max-width:600px){
     .counter{bottom:14px;left:14px;padding:6px 12px}
     .marca{bottom:14px;right:14px} .hero{padding-top:80px}
@@ -392,6 +430,13 @@
       <p class="pix-status" id="statusPix" role="status" aria-live="polite"></p>
     </div>
 
+    <!-- NOVA TELA DE SUCESSO -->
+    <div class="success-screen" id="successArea">
+      <div class="success-icon-wrap">✓</div>
+      <div class="success-title">Recebido com sucesso</div>
+      <div class="success-subtitle">Muito obrigado pelo seu apoio! ❤️</div>
+    </div>
+
     <button class="voltar" id="btnVoltar" style="margin-top: 20px; text-align: center; width: 100%; display: block; padding: 10px;">&larr; voltar ao perfil</button>
 
   </section>
@@ -474,6 +519,7 @@ const formCheckout = document.getElementById('formCheckout');
 const btnGerarPix = document.getElementById('btnGerarPix');
 const erroCheckout = document.getElementById('erroCheckout');
 const pixArea = document.getElementById('pixArea');
+const successArea = document.getElementById('successArea'); // Nova área
 const btnRotulo = document.getElementById('btnRotulo');
 const btnValor = document.getElementById('btnValor');
 
@@ -521,6 +567,7 @@ formCheckout.addEventListener('submit', async (e) => {
   e.preventDefault();
   erroCheckout.style.display = 'none';
   pixArea.classList.remove('on');
+  successArea.classList.remove('on'); // Reseta a tela de sucesso caso esteja visível
 
   if (!(valorSelecionado >= 1)) {
     erroCheckout.textContent = 'Informe um valor de R$ 1,00 ou mais.';
@@ -581,10 +628,23 @@ function iniciarChecagem(paymentId) {
 
       if (data.success && data.isPaid) {
         clearInterval(timerStatus);
-        statusEl.innerHTML = '<span style="color:#4ade80; font-weight:bold;">Pagamento Confirmado! Obrigado! ❤️</span>';
+        
+        // Esconde o PIX e mostra a tela de sucesso
+        pixArea.classList.remove('on');
+        successArea.classList.add('on');
+
+        // Espera 3 segundos e fecha o checkout (opcional)
         setTimeout(() => {
-          alert("Muito obrigado pelo apoio!");
-        }, 1000);
+          fecharCheckout();
+          // Reseta o card para a próxima vez
+          setTimeout(() => {
+            successArea.classList.remove('on');
+            formCheckout.style.display = '';
+            btnGerarPix.disabled = false;
+            btnRotulo.textContent = 'Apoiar com';
+            btnValor.textContent = fmtBRL(valorSelecionado);
+          }, 500);
+        }, 3000);
       }
     } catch (err) {
       console.error("Erro na checagem", err);
