@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>perfil</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;1,9..144,500&family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#000; --text:#fff; --text-dim:#888;
+    --card:rgba(15,15,15,.45); --border:rgba(255,255,255,.08);
+    --accent:#55ffff; --accent-2:#a855f7; --green:#4ade80;
+    --font:'Inter',sans-serif; --font-display:'Fraunces',serif; --font-mono:'Space Grotesk',monospace;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html,body{height:100%}
+  body{
+    font-family:var(--font); background:var(--bg); color:var(--text);
+    -webkit-font-smoothing:antialiased; overflow-x:hidden;
+  }
+
+  /* ===== TELA DE CADEADO ===== */
+  .lock-screen{
+    position:fixed;inset:0;z-index:999;
+    display:flex;align-items:center;justify-content:center;
+    background:#000;
+    transition:opacity .8s ease .4s,visibility .8s ease .4s;
+  }
+  .lock-screen.unlocked{opacity:0;visibility:hidden;pointer-events:none}
+  
+  .lock-icon{
+    width:72px;height:72px; cursor:pointer;
+    filter:drop-shadow(0 0 0px rgba(255,255,255,0));
+    transition:transform .2s ease,filter .3s ease;
+  }
+  
+  .lock-svg{width:100%;height:100%;overflow:visible}
+  
+  .shackle {
+    fill: none; stroke: #fff; stroke-width: 8; stroke-linecap: round; stroke-linejoin: round;
+    transition: transform .5s cubic-bezier(0.34, 1.2, 0.64, 1), stroke .5s ease;
+    transform-origin: 60px 45px; 
+  }
+  .body { fill: #fff; stroke: none; transition: fill .5s ease; }
+  .keyhole { fill: #000; stroke: none; }
+
+  .lock-icon.opening {
+    filter:drop-shadow(0 0 15px rgba(74, 222, 128, 0.6)) drop-shadow(0 0 30px rgba(74, 222, 128, 0.3));
+  }
+  .lock-icon.opening .shackle { transform: rotate(40deg); stroke: var(--green); }
+  .lock-icon.opening .body { fill: var(--green); }
+
+  /* ===== RESTO DO SITE ===== */
+  .main-content{opacity:0; visibility:hidden; transition:opacity 1s ease;}
+  .main-content.show{opacity:1; visibility:visible;}
+
+  /* IMAGEM DE FUNDO */
+  .bg-image{
+    position:fixed;inset:0;z-index:-5;
+    background-size:cover;
+    background-position:center;
+    background-repeat:no-repeat;
+    filter: brightness(0.6); /* Mais escuro pro texto aparecer */
+  }
+
+  /* VÍDEO DE FUNDO */
+  .bg-video{
+    position:fixed;inset:0;z-index:-4; width:100vw;height:100vh;
+    object-fit:cover; 
+    opacity: 0.08;
+    pointer-events:none;
+  }
+
+  .bg-fallback{
+    position:fixed;inset:0;z-index:-6;
+    background:
+      radial-gradient(circle at 20% 15%, rgba(85,255,255,.12), transparent 45%),
+      radial-gradient(circle at 80% 85%, rgba(168,85,247,.12), transparent 45%),
+      radial-gradient(circle at 50% 50%, #0a0a10 0%, #000 70%);
+    animation:bgShift 18s ease-in-out infinite alternate;
+  }
+  @keyframes bgShift{0%{transform:scale(1) translate(0,0)}100%{transform:scale(1.08) translate(-2%,2%)}}
+  
+  .fog{
+    position:fixed;inset:0;z-index:-2;
+    background:radial-gradient(ellipse at center, transparent 30%, rgba(0,0,0,.75) 100%);
+    pointer-events:none;
+  }
+
+  /* CONTROLE DE ÁUDIO */
+  .audio-toggle{
+    position:fixed;top:20px;right:20px;z-index:60;
+    display:flex;align-items:center;justify-content:center;
+    width:44px;height:44px;
+    background:var(--card); backdrop-filter:blur(14px); -webkit-backdrop-filter:blur(14px);
+    border:1px solid var(--border); border-radius:50%;
+    cursor:pointer; color:var(--text-dim);
+    transition:all .3s ease;
+    transform:translateY(-10px); 
+  }
+  .main-content.show .audio-toggle{ transform:translateY(0); transition:transform .6s .4s, color .3s, border-color .3s; }
+  .audio-toggle:hover{ border-color:var(--accent); color:var(--accent); }
+  .audio-toggle svg{width:20px;height:20px}
+  .audio-toggle .icon-muted{display:none}
+  .audio-toggle.muted .icon-vol{display:none}
+  .audio-toggle.muted .icon-muted{display:block}
+
+  /* ===== HERO ESTILO PYPAG ===== */
+  .hero{
+    display:flex;flex-direction:column;align-items:center; text-align:center;
+    padding:60px 24px 40px; min-height:100vh; justify-content:center; position:relative; z-index:2;
+  }
+  
+  .reveal{opacity:0;transform:translateY(20px);transition:opacity .8s cubic-bezier(.22,.86,.32,1.04),transform .8s cubic-bezier(.22,.86,.32,1.04)}
+  .main-content.show .reveal{opacity:1;transform:translateY(0)}
+  .reveal.d1{transition-delay:.1s} .reveal.d2{transition-delay:.2s}
+  .reveal.d3{transition-delay:.3s} .reveal.d4{transition-delay:.4s}
+
+  /* Avatar redondo com borda branca */
+  .avatar{
+    width:110px;height:110px;border-radius:50%; object-fit:cover;
+    border: 2px solid rgba(255,255,255,0.8); 
+    box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+    margin-bottom: 24px; 
+    background:#111;
+  }
+  
+  /* Nome em fonte Serifada (igual Fraunces) e cor prateada */
+  .name{
+    font-family:var(--font-display); 
+    font-size:clamp(48px, 8vw, 86px);
+    font-weight: 500; 
+    line-height:1; 
+    letter-spacing:-0.02em; 
+    margin-bottom: 16px;
+    color: #d1d5db; /* Cor prateada pro fundo escuro */
+    text-shadow: 0 2px 10px rgba(0,0,0,0.5);
+  }
+  
+  /* A Frase/Tagline */
+  .tagline {
+    font-family: var(--font);
+    font-size: 15px;
+    color: #9ca3af;
+    max-width: 480px;
+    line-height: 1.6;
+    margin-bottom: 36px;
+    text-shadow: 0 1px 4px rgba(0,0,0,0.6);
+  }
+
+  /* Botão de Apoiar */
+  .btn-apoio {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    background: rgba(18, 24, 38, 0.6); /* Fundo escuro semi-transparente */
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    color: #fff;
+    padding: 12px 32px;
+    border-radius: 999px;
+    font-size: 15px;
+    font-weight: 500;
+    text-decoration: none;
+    transition: all .3s ease;
+    cursor: pointer;
+  }
+
+  .btn-apoio:hover {
+    background: rgba(30, 40, 60, 0.8);
+    border-color: #fff;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+  }
+
+  .btn-apoio svg {
+    width: 16px;
+    height: 16px;
+    fill: #fff;
+  }
+
+  /* Contador e Marca */
+  .counter{
+    position:fixed;bottom:20px;left:20px;z-index:40; display:flex;align-items:center;gap:8px;
+    background:var(--card); backdrop-filter:blur(14px); border:1px solid var(--border);
+    border-radius:999px; padding:8px 16px; font-size:12px;color:var(--text-dim);
+    font-family:var(--font-mono); transform:translateY(20px); transition:transform .6s .6s;
+  }
+  .main-content.show .counter{transform:translateY(0)}
+  .counter svg{color:var(--accent)}
+
+  .marca{
+    position:fixed;bottom:20px;right:20px;z-index:40; font-family:var(--font-mono);
+    font-size:12px;letter-spacing:.3em; text-transform:uppercase; color:var(--text-dim);
+    text-decoration:none; transition:color .2s; transform:translateY(20px);
+  }
+  .main-content.show .marca{transform:translateY(0);transition:transform .6s .7s,color .2s}
+  .marca:hover{color:var(--accent)}
+
+  @media(max-width:600px){
+    .counter{bottom:14px;left:14px;padding:6px 12px}
+    .marca{bottom:14px;right:14px} .hero{padding-top:80px}
+    .audio-toggle{top:14px; right:14px;}
+  }
+</style>
+</head>
+<body>
+
+<div class="lock-screen" id="lockScreen">
+  <div class="lock-icon" id="lockIcon">
+    <svg class="lock-svg" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+      <path class="shackle" d="M 30 45 V 25 A 20 20 0 0 1 70 25 V 45" />
+      <rect class="body" x="24" y="45" width="52" height="36" rx="12" />
+      <circle class="keyhole" cx="50" cy="60" r="5" />
+      <rect class="keyhole" x="47" y="62" width="6" height="10" rx="3" />
+    </svg>
+  </div>
+</div>
+
+<div class="main-content" id="mainContent">
+  <div class="bg-image" id="bgImage"></div>
+  <div class="bg-fallback"></div>
+  
+  <video class="bg-video" id="bgVideo" loop playsinline preload="auto">
+    <source src="video.mp4" type="video/mp4">
+  </video>
+  
+  <div class="fog"></div>
+
+  <div class="audio-toggle" id="audioToggle" title="Mutar/Desmutar">
+    <svg class="icon-vol" viewBox="0 0 24 24" fill="currentColor"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3a4.5 4.5 0 0 0-2.5-4v8a4.5 4.5 0 0 0 2.5-4z"/></svg>
+    <svg class="icon-muted" viewBox="0 0 24 24" fill="currentColor"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3a4.5 4.5 0 0 0-2.5-4v8a4.5 4.5 0 0 0 2.5-4zM19 6l-12 12"/></svg>
+  </div>
+
+  <main class="hero">
+    <!-- FOTO REDONDA -->
+    <img class="avatar reveal d1" id="avatar" alt="">
+    
+    <!-- NOME (ESTILO PYPAG) -->
+    <h1 class="name reveal d2" id="name"></h1>
+    
+    <!-- FRASE / TAGLINE -->
+    <p class="tagline reveal d3" id="tagline"></p>
+    
+    <!-- BOTÃO APOIAR -->
+    <a href="#" class="btn-apoio reveal d4" id="btnApoiar">
+      <svg viewBox="0 0 24 24"><path d="M12 21s-7.5-4.6-9.3-9.2C1.3 8.2 3.4 5 6.8 5c2 0 3.5 1.1 4.3 2.3l.9 1.3.9-1.3C13.7 6.1 15.2 5 17.2 5c3.4 0 5.5 3.2 4.1 6.8C19.5 16.4 12 21 12 21z"/></svg>
+      <span>Apoiar</span>
+    </a>
+  </main>
+
+  <div class="counter">
+    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 5c-5 0-9 4.5-10 7 1 2.5 5 7 10 7s9-4.5 10-7c-1-2.5-5-7-10-7zm0 11.5A4.5 4.5 0 1 1 12 7.5a4.5 4.5 0 0 1 0 9zm0-2a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5z"/></svg>
+    <span id="visitas">0</span> visitas
+  </div>
+
+  <a class="marca" href="#">nao chorax</a>
+</div>
+
+<script>
+/* ============================================================
+   CONFIGURAÇÃO DO PERFIL
+   ============================================================ */
+const perfil = {
+  nome: "Snowzx", // Coloque seu nome real aqui
+  tagline: "Entre o barulho do mundo, escolhi o silêncio.", // Coloque sua frase aqui
+  avatar: "avatar.png",
+  imagemBg: "fundo.jpg",
+  linkApoiar: "#", // Link do botão apoiar (ex: https://discord.gg/...)
+};
+
+/* ============================================================
+   Lógica
+   ============================================================ */
+const lockScreen = document.getElementById('lockScreen');
+const lockIcon = document.getElementById('lockIcon');
+const mainContent = document.getElementById('mainContent');
+const video = document.getElementById('bgVideo');
+const bgImage = document.getElementById('bgImage');
+const audioToggle = document.getElementById('audioToggle');
+
+if (perfil.imagemBg) bgImage.style.backgroundImage = `url('${perfil.imagemBg}')`;
+
+video.muted = true;
+
+lockIcon.addEventListener('click', () => {
+  lockIcon.classList.add('opening');
+  
+  video.muted = false; 
+  video.volume = 0.6; 
+  video.play().catch(e => console.log("Erro ao tocar vídeo:", e));
+  
+  audioToggle.classList.remove('muted');
+
+  setTimeout(() => {
+    lockScreen.classList.add('unlocked');
+    mainContent.classList.add('show');
+  }, 1200);
+});
+
+audioToggle.addEventListener('click', () => {
+  if (video.muted) {
+    video.muted = false;
+    audioToggle.classList.remove('muted');
+  } else {
+    video.muted = true;
+    audioToggle.classList.add('muted');
+  }
+});
+
+/* ============================================================
+   População
+   ============================================================ */
+document.getElementById("avatar").src = perfil.avatar;
+document.getElementById("name").textContent = perfil.nome;
+document.getElementById("tagline").textContent = perfil.tagline;
+document.getElementById("btnApoiar").href = perfil.linkApoiar;
+
+let vis = parseInt(localStorage.getItem("visitas") || "0", 10) + 1;
+localStorage.setItem("visitas", vis);
+document.getElementById("visitas").textContent = vis;
+</script>
+</body>
+</html>
